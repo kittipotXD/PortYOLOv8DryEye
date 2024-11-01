@@ -1,42 +1,42 @@
 import cv2
 from ultralytics import YOLO
 
-# Load the model
+# โหลดโมเดล
 model = YOLO(r'C:\Users\lnwTutor\Desktop\DRYEYE D\best.pt')
 
-# Define the class mapping
+# กำหนดการแมพคลาส
 class_mapping = {
     0: "Dryeye",
     1: "Dryeye",
     2: "Eye_Normal"
 }
 
-# Open the webcam feed
+# เปิดฟีดกล้องเว็บแคม
 cap = cv2.VideoCapture(0)
 num_captures = 3
 detections = []
 
-print("Starting live webcam feed. Press 'c' to capture and analyze, 'q' to quit.")
+print("เริ่มต้นฟีดกล้องเว็บแคม กด 'c' เพื่อจับภาพและวิเคราะห์, 'q' เพื่อออก")
 
 capture_count = 0
 while True:
-    # Capture frame from webcam
+    # จับภาพจากเว็บแคม
     ret, frame = cap.read()
     if not ret:
-        print("Failed to capture image from webcam.")
+        print("ไม่สามารถจับภาพจากเว็บแคมได้")
         break
 
-    # Display the live feed
-    cv2.imshow("Webcam - Press 'c' to capture, 'q' to quit", frame)
+    # แสดงฟีดสด
+    cv2.imshow("กล้องเว็บแคม - กด 'c' เพื่อจับภาพ, 'q' เพื่อออก", frame)
     key = cv2.waitKey(1) & 0xFF
 
     if key == ord('c') and capture_count < num_captures:
-        print(f"Capturing and analyzing image {capture_count + 1}...")
-        
-        # Perform inference
+        print(f"จับภาพและวิเคราะห์ภาพที่ {capture_count + 1}...")
+
+        # ทำการอนุมาน
         results = model(frame)
-        
-        # Process the results
+
+        # ประมวลผลผลลัพธ์
         for result in results:
             boxes = result.boxes
             for box in boxes:
@@ -44,28 +44,28 @@ while True:
                 conf = box.conf[0].item()
                 cls = int(box.cls[0].item())
 
-                # Use class mapping to determine the class label
+                # ใช้การแมพคลาสเพื่อตรวจสอบชื่อคลาส
                 class_name = class_mapping.get(cls, "Unknown")
-                print(f"Detected class: {class_name} with confidence {conf:.2f}")
+                print(f"ตรวจพบคลาส: {class_name} ด้วยความมั่นใจ {conf:.2f}")
 
-                # Store the detection
+                # เก็บการตรวจจับ
                 detections.append({"class": class_name, "confidence": conf})
-                
-                # Draw bounding box and label on the frame
+
+                # วาดกรอบและป้ายกำกับบนเฟรม
                 cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
                 cv2.putText(frame, f'{class_name} {conf:.2f}', (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
-        # Display the captured frame with detection results
-        cv2.imshow(f"Captured Image {capture_count + 1}", frame)
+        # แสดงเฟรมที่จับภาพพร้อมผลการตรวจจับ
+        cv2.imshow(f"ภาพที่จับ {capture_count + 1}", frame)
         capture_count += 1
     elif key == ord('q'):
         break
 
-# Release the capture and close windows
+# ปล่อยการจับภาพและปิดหน้าต่าง
 cap.release()
 cv2.destroyAllWindows()
 
-# Calculate average confidence per class if detections were made
+# คำนวณความมั่นใจเฉลี่ยต่อคลาสถ้ามีการตรวจจับ
 if detections:
     avg_confidence = {}
     for detection in detections:
@@ -76,10 +76,10 @@ if detections:
         else:
             avg_confidence[cls] = [conf]
 
-    # Output average confidence per class
-    print("Detection Results and Average Confidence for Each Class:")
+    # แสดงผลลัพธ์การตรวจจับและความมั่นใจเฉลี่ยต่อคลาส
+    print("ผลลัพธ์การตรวจจับและความมั่นใจเฉลี่ยสำหรับแต่ละคลาส:")
     for cls, confs in avg_confidence.items():
         avg_conf = sum(confs) / len(confs)
-        print(f"{cls}: Average Confidence = {avg_conf:.2f}")
+        print(f"{cls}: ความมั่นใจเฉลี่ย = {avg_conf:.2f}")
 else:
-    print("No detections were made.")
+    print("ไม่มีการตรวจจับเกิดขึ้น")
